@@ -1,20 +1,25 @@
 from django.urls import path
 from .views import (
-    MyProfileView,
-    PhotoUploadView,
-    PreferencesView,
-    PublicProfileView,
-    HobbyListView,
-    SuggestionsPoolView,
-    MatchedProfileView,
+    CreateProfileView,
+    FetchUserView,
+    FetchUsersView,
+    EditPrefView,
+    GetPrefView,
 )
 
 urlpatterns = [
-    path('me/',                        MyProfileView.as_view(),        name='my-profile'),
-    path('me/photo/',                  PhotoUploadView.as_view(),       name='upload-photo'),
-    path('me/preferences/',            PreferencesView.as_view(),       name='preferences'),
-    path('<int:user_id>/',             PublicProfileView.as_view(),     name='public-profile'),
-    path('hobbies/',                   HobbyListView.as_view(),         name='hobby-list'),
-    path('internal/suggestions-pool/', SuggestionsPoolView.as_view(),   name='suggestions-pool'),
-    path('internal/matched/<int:user_id>/', MatchedProfileView.as_view(), name='matched-profile'),
+    # Called by auth_service right after registration
+    path('me/',                CreateProfileView.as_view(), name='create-profile'),
+
+    # fetchUsers — all users (for suggestions/browse)
+    path('',                   FetchUsersView.as_view(),    name='fetch-users'),
+
+    # fetchUser — single user by id
+    path('<int:user_id>/',     FetchUserView.as_view(),     name='fetch-user'),
+
+    # getPref — get current user's preferences
+    path('preferences/',       GetPrefView.as_view(),       name='get-pref'),
+
+    # editPref — update preferences
+    path('preferences/edit/',  EditPrefView.as_view(),      name='edit-pref'),
 ]
