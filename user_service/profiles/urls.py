@@ -6,6 +6,7 @@ from .views import (
     PublicProfileView,
     HobbyListView,
     SuggestionsPoolView,
+    MatchedProfileView,
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path('<int:user_id>/',             PublicProfileView.as_view(),     name='public-profile'),
     path('hobbies/',                   HobbyListView.as_view(),         name='hobby-list'),
     path('internal/suggestions-pool/', SuggestionsPoolView.as_view(),   name='suggestions-pool'),
+    path('internal/matched/<int:user_id>/', MatchedProfileView.as_view(), name='matched-profile'),
 ]

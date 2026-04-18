@@ -144,5 +144,21 @@ class SuggestionsPoolView(APIView):
         if profile.pref_gender != 'A':
             qs = qs.filter(gender=profile.pref_gender)
 
-        serializer = PublicProfileSerializer(qs, many=True, context={'request': request})
+            serializer = PublicProfileSerializer(qs, many=True, context={'request': request})
+            return Response(serializer.data)
+    
+    
+    # ──────────────────────────────────────────────
+    # GET /api/users/matched/<user_id>/  → matched profile
+    # ──────────────────────────────────────────────
+class MatchedProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, user_id):
+        try:
+            profile = Profile.objects.get(user_id=user_id)
+        except Profile.DoesNotExist:
+            return Response({'error': 'Profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+    
+        serializer = ProfileSerializer(profile, context={'request': request})
         return Response(serializer.data)
