@@ -1,0 +1,41 @@
+### ====================== AUTH SERVICE TESTS ======================
+
+### 1. Register New User
+POST http://127.0.0.1:8000/api/auth/register/
+Content-Type: application/json
+
+{
+  "email": "rania@test.com",
+  "nom": "Rania",
+  "prenom": "Test",
+  "password": "12345678",
+  "age": 25,
+  "town": "Annaba",
+  "gender": "F"
+}
+
+### 2. Login
+POST http://127.0.0.1:8000/api/auth/login/
+Content-Type: application/json
+
+{
+  "email": "rania@test.com",
+  "password": "12345678"
+}
+
+### 3. Logout (copy access token from login response)
+POST http://127.0.0.1:8000/api/auth/logout/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "refresh": "{{refresh_token}}"
+}
+
+### 4. Refresh Token
+POST http://127.0.0.1:8000/api/auth/token/refresh/
+Content-Type: application/json
+
+{
+  "refresh": "{{refresh_token}}"
+}
