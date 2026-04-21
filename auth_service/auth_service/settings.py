@@ -62,8 +62,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_NAME', 'projetaot'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'postgres123'),
+        'USER': os.getenv('DB_USER', 'aot_user'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'aot_pass123'),
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', '5432'),
         'OPTIONS': {'client_encoding': 'UTF8'},

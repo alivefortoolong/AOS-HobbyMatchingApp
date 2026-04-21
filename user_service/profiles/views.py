@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 
 from .models import Profile, Hobby
 from .serializers import (
@@ -39,7 +40,7 @@ class CreateProfileView(APIView):
 # fetchUser — returns id, nom, prenom, sexe, age, ville, link, hobbies
 # ──────────────────────────────────────────────
 class FetchUserView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request, user_id):
         try:
@@ -56,7 +57,7 @@ class FetchUserView(APIView):
 # fetchUsers — returns all users: id, nom, prenom, age, sexe, ville, hobbies
 # ──────────────────────────────────────────────
 class FetchUsersView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         profiles   = Profile.objects.exclude(user_id=request.user.id)
@@ -89,13 +90,16 @@ class EditPrefView(APIView):
 # getPref — send id (from JWT), receive prefGender, minAge, maxAge, ville, hobbies
 # ──────────────────────────────────────────────
 class GetPrefView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
-    def get(self, request):
+    def get(self, request, user_id):
         try:
-            profile = Profile.objects.get(user_id=request.user.id)
+            profile = Profile.objects.get(user_id=user_id)
         except Profile.DoesNotExist:
-            return Response({'error': 'Profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {'error': 'Profile not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         serializer = GetPrefSerializer(profile)
         return Response(serializer.data)

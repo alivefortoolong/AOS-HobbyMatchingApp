@@ -2,6 +2,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
+
 
 from .models import Like, Match
 from .services import get_profile
@@ -18,7 +20,7 @@ def _get_token(request):
 # Creates a match if mutual
 # ──────────────────────────────────────────────
 class LikeView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         from_id = request.data.get('idT') or request.user.id
@@ -53,11 +55,10 @@ class LikeView(APIView):
 # fetchMatches — send id (from JWT), receive list of matches
 # ──────────────────────────────────────────────
 class MatchListView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
-    def get(self, request):
-        user_id = request.user.id
-        token   = _get_token(request)
+    def get(self, request, user_id):
+        token = _get_token(request)
 
         matches = Match.objects.filter(user1_id=user_id) | Match.objects.filter(user2_id=user_id)
 
@@ -65,6 +66,7 @@ class MatchListView(APIView):
         for match in matches:
             other_id = match.user2_id if match.user1_id == user_id else match.user1_id
             profile  = get_profile(token, other_id)
+
             result.append({
                 'match_id':   match.id,
                 'matched_at': match.created_at,

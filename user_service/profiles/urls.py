@@ -18,7 +18,7 @@ urlpatterns = [
     path('<int:user_id>/',     FetchUserView.as_view(),     name='fetch-user'),
 
     # getPref — get current user's preferences
-    path('preferences/',       GetPrefView.as_view(),       name='get-pref'),
+    path('preferences/<int:user_id>/',       GetPrefView.as_view(),       name='get-pref'),
 
     # editPref — update preferences
     path('preferences/edit/',  EditPrefView.as_view(),      name='edit-pref'),

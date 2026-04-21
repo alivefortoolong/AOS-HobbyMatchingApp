@@ -74,11 +74,11 @@ WSGI_APPLICATION = 'notification_service.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'projetaos_notifications'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'postgres123'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'NAME': 'notification_db',
+        'USER': 'notification_user',
+        'PASSWORD': 'notif123',
+        'HOST': 'localhost',
+        'PORT': '5432',
         'OPTIONS': {'client_encoding': 'UTF8'},
     }
 }
