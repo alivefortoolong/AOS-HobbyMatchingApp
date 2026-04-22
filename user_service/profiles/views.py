@@ -70,19 +70,44 @@ class FetchUsersView(APIView):
 # editPref — send id, prefGender, minAge, maxAge, hobbies
 # ──────────────────────────────────────────────
 class EditPrefView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = []  
 
     def patch(self, request):
-        try:
-            profile = Profile.objects.get(user_id=request.user.id)
-        except Profile.DoesNotExist:
-            return Response({'error': 'Profile not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = EditPrefSerializer(profile, data=request.data, partial=True)
+        user_id = request.data.get('user_id')
+
+        if not user_id:
+            return Response(
+                {'error': 'user_id is required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            profile = Profile.objects.get(user_id=user_id)
+        except Profile.DoesNotExist:
+            return Response(
+                {'error': 'Profile not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = EditPrefSerializer(
+            profile,
+            data=request.data,
+            partial=True
+        )
+
         if serializer.is_valid():
             serializer.save()
-            return Response(GetPrefSerializer(profile).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response(
+                GetPrefSerializer(profile).data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 # ──────────────────────────────────────────────
