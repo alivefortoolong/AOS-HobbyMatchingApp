@@ -67,12 +67,14 @@ WSGI_APPLICATION = 'user_service.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# load_dotenv()
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'user_db',
-        'USER': 'user_service_user',
-        'PASSWORD': 'user123',
+        'NAME': 'projetaos_users',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres123',
         'HOST': 'localhost',
         'PORT': '5432',
         'OPTIONS': {'client_encoding': 'UTF8'},

@@ -67,16 +67,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'notification_service.wsgi.application'
 
-
+# load_dotenv()
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'notification_db',
-        'USER': 'notification_user',
-        'PASSWORD': 'notif123',
+        'NAME': 'projetaos_notifications',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres123',
         'HOST': 'localhost',
         'PORT': '5432',
         'OPTIONS': {'client_encoding': 'UTF8'},
@@ -120,7 +120,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+# ====================== OTHER SERVICES ======================
+USER_SERVICE_URL = os.getenv('USER_SERVICE_URL', 'http://127.0.0.1:8001')
 # ====================== RABBITMQ ======================
 RABBITMQ_URL = os.getenv('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
  
