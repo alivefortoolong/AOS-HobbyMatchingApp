@@ -77,6 +77,13 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+ 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Auth Service API',  # change per service
+    'DESCRIPTION': 'Handles authentication',  # customize
+    'VERSION': '1.0.0',
 }
 
 from datetime import timedelta
