@@ -90,8 +90,13 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
- 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Matching Service API',  
+    'DESCRIPTION': 'Handles Matching ',  
+    'VERSION': '1.0.0',
+}
 
  # ====================== JWT (same secret as auth_service) ======================
 JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'django-insecure--sn$cvuc_&3#0*9*3s)4r#eg_-3a80if3&fac$_c0v#en#)q68')

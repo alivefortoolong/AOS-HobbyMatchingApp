@@ -88,6 +88,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'User Service API',  
+    'DESCRIPTION': 'Handles Users',  
+    'VERSION': '1.0.0',
 }
 
 JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'django-insecure--sn$cvuc_&3#0*9*3s)4r#eg_-3a80if3&fac$_c0v#en#)q68')
