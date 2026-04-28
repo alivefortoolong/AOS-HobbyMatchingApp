@@ -1,1 +1,93 @@
+# =========================
+# 🐍 Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# =========================
+# 🌱 Virtual environments
+# =========================
+venv/
+env/
+.venv/
+ENV/
+
+# =========================
+# 🔐 Environment variables
+# =========================
 .env
+.env.*
+*.env
+
+# =========================
+# 🧠 Django stuff
+# =========================
+*.log
+db.sqlite3
+db.sqlite3-journal
+
+# =========================
+# 📦 Static & Media files
+# =========================
+staticfiles/
+media/
+
+# =========================
+# 🧪 Cache / test
+# =========================
+.cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# =========================
+# 🧹 Migrations (optional)
+# =========================
+# ⚠️ Careful: usually you KEEP migrations in Django!
+# Uncomment ONLY if your teacher/project says so
+
+# */migrations/*
+# !*/migrations/__init__.py
+
+# =========================
+# 💻 IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# 🖥️ OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# 📦 Build / distribution
+# =========================
+build/
+dist/
+*.egg-info/
+
+# =========================
+# 🔑 Secrets / keys
+# =========================
+*.pem
+*.key
+
+# =========================
+# 📸 Uploaded images (optional if inside media/)
+# =========================
+# *.jpg
+# *.png
+# *.jpeg
+
+# =========================
+# 🧾 Misc
+# =========================
+*.bak
+*.tmp
