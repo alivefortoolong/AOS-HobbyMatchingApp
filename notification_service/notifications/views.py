@@ -2,6 +2,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
+
 
 from .models import Notification
 from .services import get_user_info
@@ -13,23 +15,29 @@ from .services import get_user_info
 # Receive: list of { id, nom, prenom, msg }
 # ──────────────────────────────────────────────
 class NotifView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
 
-    def get(self, request):
-        token   = request.META.get('HTTP_AUTHORIZATION', '').split(' ', 1)[-1]
-        user_id = request.user.id
+    def get(self, request, user_id):
+        try:
+            notifications = Notification.objects.filter(
+                user_id=user_id
+            ).order_by('-created_at')
 
-        notifications = Notification.objects.filter(user_id=user_id).order_by('-created_at')
+            result = []
 
-        result = []
-        for notif in notifications:
-            # Fetch sender's nom/prenom from user_service
-            sender_info = get_user_info(token, notif.from_user_id) if notif.from_user_id else {}
-            result.append({
-                'id':     notif.id,
-                'nom':    sender_info.get('nom', ''),
-                'prenom': sender_info.get('prenom', ''),
-                'msg':    notif.message,
-            })
+            for notif in notifications:
+                result.append({
+                    'id': notif.id,
+                    'nom': getattr(notif, 'nom', ''),
+                    'prenom': getattr(notif, 'prenom', ''),
+                    'msg': notif.message,
+                })
+                
 
-        return Response(result, status=status.HTTP_200_OK)
+            return Response(result, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

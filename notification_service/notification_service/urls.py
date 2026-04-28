@@ -3,5 +3,5 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/notifications/', include('notifications.urls')),
+    path('api/notifications/<int:user_id>/', include('notifications.urls')),
 ]
