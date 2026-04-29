@@ -11,27 +11,31 @@ Content-Type: application/json
   "password": "12345678",
   "age": 25,
   "town": "Annaba",
-  "gender": "Female",
+  "gender": "F",
   "social_link": "https://en.wikipedia.org/wiki/Li_Fangwei",
   "pref_age_min": 22,
   "pref_age_max": 30,
-  "pref_gender": "Female",
-  "hobbies": ["Hiking","Reading"],
+  "pref_gender": "F",
+  "hobbies": ["Hiking","Reading"]
 }
+
+### 1b. Register Another User
+POST http://127.0.0.1:8000/api/auth/register/
+Content-Type: application/json
 
 {
   "email": "anes@test.com",
   "nom": "Loubar",
   "prenom": "Anes",
-  "password": "pwd",
+  "password": "12345678",
   "age": 25,
   "town": "Annaba",
-  "gender": "Male",
+  "gender": "M",
   "social_link": "https://en.wikipedia.org/wiki/Li_Fangwei",
   "pref_age_min": 22,
   "pref_age_max": 30,
-  "pref_gender": "Female",
-  "hobbies": ["Hiking","Reading"],
+  "pref_gender": "F",
+  "hobbies": ["Hiking","Reading"]
 }
 
 ### 2. Login
@@ -42,6 +46,10 @@ Content-Type: application/json
   "email": "rania@test.com",
   "password": "12345678"
 }
+
+### 2b. Login Another User
+POST http://127.0.0.1:8000/api/auth/login/
+Content-Type: application/json
 
 {
   "email": "anes@test.com",
