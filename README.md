@@ -300,14 +300,4 @@ If RabbitMQ is not running, the app continues working — likes and matches stil
 
 ---
 
-## Team
-
-| Member | Responsibilities |
-|--------|----------------|
-| **M1** | Auth Service · Docker deployment |
-| **M2** | All REST APIs (auth, users, matching, notifications) |
-| **M3** | RabbitMQ config · Consumer worker · Async tests |
-
----
-
 *ProjetAOS — Last updated April 2026*
