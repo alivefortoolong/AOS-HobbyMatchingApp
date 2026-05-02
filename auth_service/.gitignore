@@ -10,6 +10,10 @@ env/
 .venv/
 ENV/
 
+test_token.py
+test_endpoint.py
+test_notif_auth.py
+check_settings.py
 
 .env
 .env.*

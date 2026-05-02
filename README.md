@@ -22,15 +22,15 @@
 
 ## Overview
 
-**ProjetAOS** is a hobby-based matching platform built with a microservices architecture. Users register with their full profile in one call, browse other users, like them, and get matched. Notifications are delivered asynchronously via RabbitMQ.
+**ProjetAOS** is a hobby-based matching platform built with a microservices architecture. Users register with their full profile in one call, browse other users, like them, and get matched when the like is mutual. Notifications are delivered asynchronously via RabbitMQ.
 
 ### ✨ Features
 
-- Single-call registration (auth + profile created together)
-- JWT authentication shared across all services
+- Single-call registration (auth + profile created atomically)
+- JWT authentication shared across all services via a common secret
 - Browse all users and their profiles
 - Like system with automatic match detection on mutual likes
-- Async notifications via RabbitMQ
+- Async notifications via RabbitMQ (like, match events)
 
 ### 🛠 Tech Stack
 
@@ -40,6 +40,7 @@
 | Database | PostgreSQL (one DB per service) |
 | Messaging | RabbitMQ |
 | Auth | JWT — HS256, shared secret across all services |
+| Docs | drf-spectacular (Swagger / Redoc) |
 
 ---
 
@@ -61,12 +62,30 @@
                                                 └──────────────────────┘
 ```
 
-| Service | Port | Database |
-|---------|------|----------|
-| `auth_service` | 8000 | `projetaos_auth` |
-| `user_service` | 8001 | `projetaos_users` |
-| `matching_service` | 8002 | `projetaos_matching` |
-| `notification_service` | 8003 | `projetaos_notifications` |
+| Service | Port | Database | Role |
+|---------|------|----------|------|
+| `auth_service` | 8000 | `projetaos_auth` | Registration, Login, JWT issuance |
+| `user_service` | 8001 | `projetaos_users` | Profiles, hobbies, preferences |
+| `matching_service` | 8002 | `projetaos_matching` | Like, match detection |
+| `notification_service` | 8003 | `projetaos_notifications` | Notifications, RabbitMQ consumer |
+
+### Key principle — Shared JWT
+
+All 4 services use the **same `JWT_SECRET_KEY`** to validate tokens locally without HTTP calls between services. The token is issued by `auth_service` and accepted by all others.
+
+### Inter-service communication
+
+```
+POST /register/
+  └─▶ creates User in auth_service
+  └─▶ generates JWT for the new user
+  └─▶ calls POST user_service/api/users/me/ → creates Profile
+
+POST /like/
+  └─▶ creates Like in matching_service DB
+  └─▶ if mutual → creates Match
+  └─▶ publishes event to RabbitMQ → notification_service consumer creates Notification
+```
 
 ---
 
@@ -76,7 +95,7 @@
 
 - Python 3.11+
 - PostgreSQL
-- RabbitMQ (optional — app works without it, just no notifications)
+- RabbitMQ (optional — the app works without it, notifications just won't be created)
 
 ### Database Setup
 
@@ -89,12 +108,13 @@ createdb projetaos_notifications
 
 ### Environment Variables
 
-Each service needs a `.env` file. The `JWT_SECRET_KEY` **must be identical** across all services.
+Each service needs a `.env` file at its root. The `JWT_SECRET_KEY` **must be identical** across all services.
 
 ```env
+# Common to all services
 SECRET_KEY=your-django-secret-key
-JWT_SECRET_KEY=same-key-in-all-services
-DB_NAME=projetaos_xxx
+JWT_SECRET_KEY=same-key-in-all-four-services
+DB_NAME=projetaos_<service>
 DB_USER=postgres
 DB_PASSWORD=postgres123
 DB_HOST=localhost
@@ -106,7 +126,7 @@ DB_PORT=5432
 USER_SERVICE_URL=http://127.0.0.1:8001
 ```
 
-`matching_service` also needs:
+`matching_service` and `notification_service` also need:
 ```env
 RABBITMQ_URL=amqp://guest:guest@localhost:5672/
 ```
@@ -157,11 +177,9 @@ Authorization: Bearer <token>
 
 ### 🔐 Auth Service — `http://127.0.0.1:8000/api/auth/`
 
----
-
 #### `POST /register/`
 
-Creates the user account **and** the full profile in a single call. Returns a token immediately — no second step needed.
+Creates the user account **and** the full profile in a single call. Returns a usable token immediately.
 
 **Request Body**
 
@@ -180,231 +198,88 @@ Creates the user account **and** the full profile in a single call. Returns a to
 | `pref_age_max` | integer | ❌ default 99 |
 | `hobbies` | array of strings | ❌ |
 
-**Request**
-```json
-{
-  "email": "ali@test.com",
-  "nom": "Benali",
-  "prenom": "Ali",
-  "password": "12345678",
-  "gender": "M",
-  "age": 22,
-  "town": "Annaba",
-  "social_link": "https://instagram.com/ali",
-  "pref_gender": "F",
-  "pref_age_min": 18,
-  "pref_age_max": 35,
-  "hobbies": ["Football", "Music"]
-}
-```
-
 **Response `201`**
 ```json
-{
-  "id": 8,
-  "token": "<jwt_access_token>"
-}
+{ "id": 8, "token": "<jwt_access_token>" }
 ```
 
 ---
 
 #### `POST /login/`
 
-Authenticates a user and returns their id and token.
-
-**Request**
+**Request** — note: password field is `pwd`
 ```json
-{
-  "email": "ali@test.com",
-  "pwd": "12345678"
-}
+{ "email": "ali@test.com", "pwd": "12345678" }
 ```
 
 **Response `200`**
 ```json
-{
-  "id": 8,
-  "token": "<jwt_access_token>"
-}
+{ "id": 8, "token": "<jwt_access_token>" }
 ```
 
 ---
 
 ### 👤 User Service — `http://127.0.0.1:8001/api/users/`
 
----
+#### `GET /` — fetchUsers
+Returns all profiles except the authenticated user's own.
 
 #### `GET /<user_id>/` — fetchUser
+Returns a single user's public profile.
 
-Returns a single user's full profile including social link and hobbies.
+**Profile fields:** `id`, `user_id`, `nom`, `prenom`, `sexe`, `age`, `ville`, `link`, `hobbies`
 
-**Response `200`**
-```json
-{
-  "id": 3,
-  "user_id": 8,
-  "nom": "Benali",
-  "prenom": "Ali",
-  "sexe": "M",
-  "age": 22,
-  "ville": "Annaba",
-  "link": "https://instagram.com/ali",
-  "hobbies": ["Football", "Music"]
-}
-```
-
----
-
-#### `GET /` — fetchUsers
-
-Returns all users except the currently authenticated user.
-
-**Response `200`**
-```json
-[
-  {
-    "id": 4,
-    "user_id": 9,
-    "nom": "Amrani",
-    "prenom": "Sara",
-    "sexe": "F",
-    "age": 23,
-    "ville": "Alger",
-    "link": "",
-    "hobbies": ["Music"]
-  }
-]
-```
-
----
-
-#### `GET /preferences/` — getPref
-
-Returns the current user's matching preferences.
-
-**Response `200`**
-```json
-{
-  "prefGender": "F",
-  "minAge": 18,
-  "maxAge": 35,
-  "ville": "Annaba",
-  "hobbies": ["Football", "Music"]
-}
-```
-
----
+#### `GET /preferences/<user_id>/` — getPref
+Returns matching preferences: `prefGender`, `minAge`, `maxAge`, `ville`, `hobbies`
 
 #### `PATCH /preferences/edit/` — editPref
-
-Updates the current user's matching preferences and hobby list.
-
-**Request**
-```json
-{
-  "prefGender": "A",
-  "minAge": 20,
-  "maxAge": 40,
-  "hobbies": ["Gaming", "Cooking"]
-}
-```
-
-**Response `200`** — Returns updated preferences in the same format as `getPref`.
+Updates preferences. Accepts: `prefGender`, `minAge`, `maxAge`, `hobbies`
 
 ---
 
 ### 💘 Matching Service — `http://127.0.0.1:8002/api/matching/`
 
----
-
-#### `POST /like/` — like
-
-Likes another user. If the other user has already liked back, a match is created automatically.
+#### `POST /like/`
 
 **Request**
-
-| Field | Description |
-|-------|-------------|
-| `idT` | ID of the user sending the like |
-| `idR` | ID of the user being liked |
-
 ```json
-{
-  "idT": 8,
-  "idR": 9
-}
+{ "idT": 8, "idR": 9 }
 ```
 
-**Response `201` — Like only**
-```json
-{ "liked": true }
-```
+**Response `201`** — like only: `{ "liked": true }`  
+**Response `201`** — mutual match: `{ "matched": true, "match_id": 2 }`
 
-**Response `201` — Mutual match**
-```json
-{ "matched": true, "match_id": 2 }
-```
+#### `GET /matches/<user_id>/` — fetchMatches
+Returns all confirmed matches with enriched profile data from `user_service`.
 
 ---
 
-#### `GET /matches/` — fetchMatches
+### 🔔 Notification Service — `http://127.0.0.1:8003/api/notifications/<user_id>/`
 
-Returns all confirmed matches for the current user with full profile data.
+#### `POST /` — notif
+Returns all notifications for the given user with sender info and message.
 
 **Response `200`**
 ```json
 [
-  {
-    "match_id": 2,
-    "matched_at": "2026-04-18T20:57:55.067520Z",
-    "user": {
-      "id": 4,
-      "user_id": 9,
-      "nom": "Amrani",
-      "prenom": "Sara",
-      "sexe": "F",
-      "age": 23,
-      "ville": "Alger",
-      "link": "",
-      "hobbies": ["Music"]
-    }
-  }
+  { "id": 1, "nom": "Amrani", "prenom": "Sara", "msg": "Someone liked your profile!" },
+  { "id": 2, "nom": "Amrani", "prenom": "Sara", "msg": "You have a new match!" }
 ]
 ```
 
 ---
 
-### 🔔 Notification Service — `http://127.0.0.1:8003/api/notifications/`
+### 📖 Swagger Docs
 
----
-
-#### `GET /` — notif
-
-Returns all notifications for the current user with sender name and message.
-
-**Response `200`**
-```json
-[
-  {
-    "id": 1,
-    "nom": "Amrani",
-    "prenom": "Sara",
-    "msg": "Someone liked your profile!"
-  },
-  {
-    "id": 2,
-    "nom": "Amrani",
-    "prenom": "Sara",
-    "msg": "You have a new match!"
-  }
-]
-```
+Auto-generated API docs are available on `auth_service`:
+- Swagger UI: `http://127.0.0.1:8000/api/docs/`
+- Redoc: `http://127.0.0.1:8000/api/redoc/`
 
 ---
 
 ## Authentication
 
-All services validate JWT tokens locally using the shared `JWT_SECRET_KEY`. No inter-service auth calls are made.
+All services validate JWT tokens locally using the shared `JWT_SECRET_KEY`. No inter-service calls are needed for auth.
 
 - **Algorithm:** HS256
 - **Token lifetime:** 24 hours
@@ -414,14 +289,14 @@ All services validate JWT tokens locally using the shared `JWT_SECRET_KEY`. No i
 
 ## RabbitMQ Events
 
-`matching_service` publishes to the `activity_events` queue. `notification_service` consumes them via a separate worker.
+`matching_service` publishes to the `activity_events` queue. `notification_service` consumes them via a separate worker process.
 
 | Event | Triggered by | Payload |
 |-------|-------------|---------|
 | `new_like` | `POST /like/` | `{ "event": "new_like", "from_user": 8, "to_user": 9 }` |
 | `new_match` | Mutual like | `{ "event": "new_match", "user1": 8, "user2": 9 }` |
 
-If RabbitMQ is not running, the app continues working normally — likes and matches still work, notifications just won't be created.
+If RabbitMQ is not running, the app continues working — likes and matches still work, only notification creation is skipped (logged as warning).
 
 ---
 
@@ -429,10 +304,10 @@ If RabbitMQ is not running, the app continues working normally — likes and mat
 
 | Member | Responsibilities |
 |--------|----------------|
-| **M1** | Auth Service · UI/UX Frontend · Docker deployment |
+| **M1** | Auth Service · Docker deployment |
 | **M2** | All REST APIs (auth, users, matching, notifications) |
 | **M3** | RabbitMQ config · Consumer worker · Async tests |
 
 ---
 
-*ProjetAOS — Last updated April 18, 2026*
+*ProjetAOS — Last updated April 2026*
