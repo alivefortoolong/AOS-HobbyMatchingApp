@@ -299,5 +299,44 @@ All services validate JWT tokens locally using the shared `JWT_SECRET_KEY`. No i
 If RabbitMQ is not running, the app continues working — likes and matches still work, only notification creation is skipped (logged as warning).
 
 ---
+### Dockerfile (same template for all 4 services)
+
+Place one `Dockerfile` at the root of each service folder:
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+```
+
+> For `notification_service`, the consumer runs as a **separate container** (see `docker-compose.yml` below).
+
+---
+
+### Running with Docker
+
+```bash
+# Build and start all containers
+docker-compose up --build
+
+# Run in background (detached)
+docker-compose up --build -d
+
+# Stop everything
+docker-compose down
+
+# Stop and delete all volumes (full reset)
+docker-compose down -v
+```
+
 
 *ProjetAOS — Last updated April 2026*
