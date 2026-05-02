@@ -23,16 +23,17 @@ class NotifView(APIView):
                 if not user_info:
                    continue
                 result.append({
-                    'id':       notif.id,
-                    'nom':      user_info.get('nom', ''),
-                    'prenom':   user_info.get('prenom', ''),
-                    'sexe':     user_info.get('sexe', ''),
-                    'hobbies':  user_info.get('hobbies', []),
-                    'msg':      notif.message,
-                    'type':     notif.notif_type,
-                    'read':     notif.read,
-                    'created_at': notif.created_at,
-                })
+                 'id':           notif.id,
+                 'from_user_id': notif.from_user_id,
+                 'nom':          user_info.get('nom', ''),
+                 'prenom':       user_info.get('prenom', ''),
+                 'sexe':         user_info.get('sexe', ''),
+                 'hobbies':      user_info.get('hobbies', []),
+                 'msg':          notif.message,
+                 'type':         notif.notif_type,
+                 'read':         notif.read,
+                 'created_at':   notif.created_at,
+})
 
             return Response(result, status=status.HTTP_200_OK)
 
